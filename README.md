@@ -1,4 +1,4 @@
-# Ultimate Blower
+# Ultimate Broadcaster
 
 ### Requirements
 - golang
