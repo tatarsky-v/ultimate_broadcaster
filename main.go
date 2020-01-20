@@ -12,15 +12,40 @@ const SAMPLES_FOLDER = "./samples"
 const PLAYER = "mpg123"
 
 func main() {
-	http.HandleFunc("/", handler)
+	http.HandleFunc("/random_phrase", randomPhrase)
+	http.HandleFunc("/polly", polly)
 	log.Println("Listen on port :8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
-func handler(w http.ResponseWriter, r *http.Request) {
+func randomPhrase(w http.ResponseWriter, r *http.Request) {
 	go (func() {
 		cmd := exec.Command(PLAYER, randomFile())
 		err := cmd.Run()
+		if err != nil {
+			log.Fatal(err)
+		}
+	})()
+}
+
+func polly(w http.ResponseWriter, r *http.Request) {
+	go (func() {
+    text := r.URL.Query().Get("text")
+    if len(text) == 0 {
+    	log.Println("Url Param 'text' is missing")
+    	return
+    }
+
+		cmd := exec.Command(
+			"aws", "polly", "synthesize-speech", "--output-format", "mp3", "--text",
+			text, "--voice-id", "Maxim", "/tmp/voice.mp3")
+		err := cmd.Run()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		cmd = exec.Command("mpg123", "/tmp/voice.mp3")
+		err = cmd.Run()
 		if err != nil {
 			log.Fatal(err)
 		}
